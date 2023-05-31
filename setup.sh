@@ -23,25 +23,26 @@ fi
 
 # 2-Create the environment
 echo -e "\e[1;33m-Step 2: Create the Python environment\e[0m"
-read -p "Do you want to create the environment? (y/N): " -i "N" response
+read -p "Do you want to create the environment with conda? (y/N): " -i "N" response
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     
     read -p "Enter the name of the environment: " environment_name
-    read -p "Select the environment type (conda/venv): " environment_type
-
+    #read -p "Select the environment type (conda/venv): " environment_type
+    environment_type="conda"
 
     if [[ "$environment_type" == "conda" ]]; then
         # Conda environment logic
-        echo "You have selected Conda."
+        #echo "You have selected Conda."
+        echo "Downloading yml file..."
         wget "$yml_url" > /dev/null 2>&1
-        conda env create -n "$environment_name" -f environment.yml
+        echo "Creating the environment (This may take a while)..."
+        conda env create -n "$environment_name" -f environment.yml > /dev/null 2>&1
         if [ $? -ne 0 ]; then
             echo -e "\e[1;31mError: Failed to create the $environment_name environment.\e[0m"
             exit 1
         fi
-        conda deactivate $$ deactivate
-        conda activate "$environment_name"
         echo -e "\e[1;32mThe $environment_name environment has been created successfully.\e[0m"
+        echo -e "\e[38;5;166mYou need to activate the environment manually: conda activate $environment_name \e[0m"
         
     elif [[ "$environment_type" == "venv" ]]; then
         # venv environment logic
@@ -57,6 +58,7 @@ if [[ "$response" == "Y" || "$response" == "y" ]]; then
         source "$environment_name"/bin/activate > /dev/null 2>&1
         pip install -r requirements.txt
         echo -e "\e[1;32mThe $environment_name environment has been created successfully.\e[0m"
+        echo -e "\e[38;5;166mYou need to activate the environment manually: \e[0m"
         cd ..
     else
         echo -e "\e[1;31mInvalid option. Please select 'conda' or 'venv'.\e[0m"
@@ -68,22 +70,23 @@ fi
 # 3-Download weights (.pt files)
 echo -e "\e[1;33m-Step 3: Downloading weights.\e[0m"
 echo -e "\e[1;34m   You can check available weights on $weights_url\e[0m"
-
 read -p "Do you want to download weights? (y/N): " -i "N" response
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     mkdir yolov5/weights > /dev/null 2>&1
-    cd yolov5/weights
-    echo -e "\e[1;33msavin on 'yolov5/weights'\e[0m"
+    cd yolov5/weights    
     read -p "Which weight do you want to download? (e.g=yolov5l): " weight_name
-    wget "https://github.com/ultralytics/yolov5/releases/download/v6.1/$weight_name.pt" #maybe this change for different models
-    cd ../..    
-
-else    
+    echo -e "\e[1;33msavin on 'yolov5/weights'\e[0m"
+    echo "Downloading ..."
+    wget "https://github.com/ultralytics/yolov5/releases/download/v6.1/$weight_name.pt" > /dev/null 2>&1 #maybe this change for different models
+    echo -e "\e[1;32mDone.\e[0m"
+    cd ../..
+else
     echo -e "\e[38;5;166mThe weights will not be downloaded.\e[0m"
 fi
 
 # 4-Test the model (.pt files)
 echo -e "\e[1;33m-Step 4: Test the Model.\e[0m"
+echo -e "\e[38;5;166mYou need to activate the environment.\e[0m"
 read -p "Do you want to Test the Model (run detect.py)? (y/N): " -i "N" response
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     cd yolov5/weights   
@@ -91,7 +94,7 @@ if [[ "$response" == "Y" || "$response" == "y" ]]; then
     cd ..
     mkdir images > /dev/null 2>&1
     cd images
-    wget https://github.com/WilberRojas/Yolo_test/raw/main/test.jpg    
+    wget https://github.com/WilberRojas/Yolo_test/raw/main/test.jpg > /dev/null 2>&1
     cd ..    
     python detect.py --weights "weights/$weight_name" --source images/test.jpg
     cd ..
